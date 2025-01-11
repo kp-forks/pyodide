@@ -1,16 +1,16 @@
 package:
   name: opencv-python
-  version: 4.8.0.76
+  version: 4.10.0.84
   top-level:
     - cv2
 about:
-  home: https://github.com/skvark/opencv-python
+  home: https://github.com/opencv/opencv-python
   PyPI: https://pypi.org/project/opencv-python
   summary: Wrapper package for OpenCV python bindings.
   license: MIT
 source:
-  url: https://files.pythonhosted.org/packages/32/72/03747a6820bc970aeb0b89e653d1084068ac1ed606a83d8b5ac6fc237c14/opencv-python-4.8.0.76.tar.gz
-  sha256: 56d84c43ce800938b9b1ec74b33942b2edbcef3f70c2754eb9bfe5dff1ee3ace
+  url: https://files.pythonhosted.org/packages/4a/e7/b70a2d9ab205110d715906fc8ec83fbb00404aeb3a37a0654fdb68eb0c8c/opencv-python-4.10.0.84.tar.gz
+  sha256: 72d234e4582e9658ffea8e9cae5b63d488ad06994ef12d81dc303b17472f3526
   extras:
     - [extras/OpenCVFindLibsGrfmt.cmake, opencv/cmake/OpenCVFindLibsGrfmt.cmake]
     - [
@@ -18,7 +18,7 @@ source:
         opencv/modules/videoio/cmake/detect_ffmpeg.cmake,
       ]
   patches:
-    - patches/0001-Enable-file-system.patch
+    - patches/0001-Unpin-setuptools.patch
 
 requirements:
   run:
@@ -27,6 +27,7 @@ requirements:
     - ffmpeg
     - libwebp
     - libtiff
+    - setuptools
 build:
   # RELOCATABLE flag is required because if affects how emscripten build ports.
   cxxflags: |
@@ -49,7 +50,7 @@ build:
   script: |
     # export VERBOSE=1
 
-    export NUMPY_INCLUDE_DIR="$HOSTINSTALLDIR/lib/python$PYMAJOR.$PYMINOR/site-packages/numpy/core/include/"
+    export NUMPY_INCLUDE_DIR="$HOSTINSTALLDIR/lib/python$PYMAJOR.$PYMINOR/site-packages/numpy/_core/include/"
     export FFMPEG_ROOT="$WASM_LIBRARY_DIR"
 
     source $PKGDIR/extras/build_args.sh

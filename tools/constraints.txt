@@ -1,4 +1,8 @@
-cython<3
-# Remove the following when mypy releases a new version
-# https://github.com/python/mypy/pull/14788
-types-setuptools<67.4.0.2
+# This file is used to track build constraints for packages
+# via pyodide-build.
+#
+# Add any upper bounds for packages here to ensure that
+# their builds succeed, or those for packages that rely
+# on them at build time.
+
+maturin<1.8

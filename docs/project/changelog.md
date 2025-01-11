@@ -16,24 +16,586 @@ myst:
 
 ## Unreleased
 
-- {{ Fix }} Fixed an Emscripten bug that broke some matplotlib functionality.
-  {pr}`4163`
+### Packages
+
+- Upgraded `protobuf` to 5.29.2 {pr}`5298`
+- Added `apsw` 3.47.2.0 {pr}`5251`
+- Added `css_inline` 0.14.6 {pr}`5304`
+- Upgraded `nlopt` 2.9.1 {pr}`5305`
+
+## Version 0.27.0
+
+_January 1, 2025_
+
+- {{ Enhancement }} Upgrade to Python 3.12.7.
+  {pr}`5149`
+
+- {{ Enhancement }} Add unix-timezones module, which installs Unix compatible
+  timezone data in /usr/share/zoneinfo, for use with C/C++ libraries which do
+  timezone handling.
+  {pr}`4889`
+
+- {{ Enhancement }} `HttpStatusError` now store their the corresponding request
+  `status`, `status_message` and `url`
+  {pr}`4974`.
+
+- {{ Breaking }} Shared libraries are now loaded locally. This means that packages that
+  depend on shared libraries link to the shared libraries explicitly.
+  {pr}`4876`
+
+- {{ Enhancement }} Added implementation to abort `pyfetch` and `FetchResponse`
+  manually or automatically.
+  {pr}`4846`
+
+- {{ Enhancement }} Unvendored stdlibs are now packaged in a wheel format
+  {pr}`4902`
+
+- {{ Breaking }} Prebuilt third-party libraries like `openblas`, `openssl`, `zlib` are
+  not included in the cross-build env anymore.
+  {pr}`4995`
+
+- {{ Enhancement }} Added `JsProxy.as_py_json` method to adapt from JavaScript
+  JSON (Arrays and Objects). to Python JSON (lists and dicts).
+  {pr}`4666`
+
+- {{ Enhancement }} `pyodide.loadPackage` will now install data files inside the wheel.
+  {pr}`5034`
+
+- {{ Enhancement }} `find_imports("import pkg.module.submodule")` will now
+  return `["pkg", "pkg.module", "pkg.module.submodule"]`. This improves support
+  for namespace packages.
+  {pr}`5039`
+
+- {{ Breaking }} Removed `webworker.js` from the distribution files. It was a
+  pretty small file, if someone is using it for something they can just copy it into
+  their own code.
+  {pr}`5114`
+
+- {{ Enhancement }} Enabled `pyodide.FS.trackingDelegate` which can be used to track
+  file system operations. See
+  [Emscripten docs](https://emscripten.org/docs/api_reference/Filesystem-API.html#FS.trackingDelegate[callback%20name])
+  for more information.
+  {pr}`5100`
+
+- {{ Enhancement }} When using the Pyodide console, the standard streams inherit
+  `TextIOBase` and behave more like normal IO streams. In particular, they have
+  methods like `writelines()` and `readlines()`. They still don't have file
+  descriptors though.
+  {pr}`5056`
+
+- {{ Breaking }} The WASM backend is now the default backend for `matplotlib-pyodide` and
+  the HTML5 backend has been disabled, temporarily redirecting to it. Power users
+  might see minor incompatibilities and subtle differences. Please see
+  https://github.com/pyodide/matplotlib-pyodide/issues/64 and
+  https://github.com/pyodide/matplotlib-pyodide/issues/65
+  for more information and if you wish to contribute to the discussion.
+  {pr}`4510`
+
+### Packages
+
+- Upgraded `numpy` to 2.0.2 {pr}`4925`
+- Upgraded `RobotRaconteur` to 1.2.2 {pr}`4925`
+- Upgraded `gsw` to 3.6.19 {pr}`4925`
+- Upgraded `opencv-python` to 4.10.0.84 {pr}`4925`
+- Upgraded `yt` to 4.3.1 {pr}`4925`
+- Upgraded `xgboost` to 2.1.2 {pr}`4925`
+- Upgraded `autograd` to 1.7.0 {pr}`4925`
+- Upgraded `sisl` to 0.15.1 {pr}`4925`
+- Upgraded `cartopy` to 0.24.1 {pr}`4925`
+- Upgraded `astropy` to 7.0.0 {pr}`4925`
+- Upgraded `biopython` to 1.84 {pr}`4925`
+- Upgraded `fastparquet` to 2024.5.0 {pr}`4925`
+- Upgraded `geopandas` to 1.0.1 {pr}`4925`
+- Upgraded `imageio` to 2.36.0 {pr}`4925`
+- Upgraded `lightgbm` to 4.5.0 {pr}`4925`
+- Upgraded `netcdf4` to 1.7.2 {pr}`4925`
+- Upgraded `networkx` to 3.4.2 {pr}`4925`
+- Upgraded `numcodecs` to 0.13.1 {pr}`4925`
+- Upgraded `pandas` to 2.2.3 {pr}`4893`, {pr}`4925`
+- Upgraded `pywavelets` to 1.7.0 {pr}`4925`
+- Upgraded `shapely` to 2.0.6 {pr}`4925`
+- Upgraded `threadpoolctl` to 3.5.0 {pr}`4925`
+- Upgraded `unyt` to 3.0.3 {pr}`4925`
+- Upgraded `xarray` to 2024.10.0 {pr}`4925`
+- Upgraded `zarr` to 2.18.3 {pr}`4925`
+- Upgraded `h5py` to 3.12.1 {pr}`4925`
+- Upgraded `cftime` to 1.6.4.post1 {pr}`4925`
+- Upgraded `clarabel` to 0.9.0 {pr}`4925`
+- Upgraded `ewah_bool_utils` to 1.2.2 {pr}`4925`
+- Upgraded `galpy` to 1.10.1 {pr}`4925`
+- Upgraded `mne-python` to 1.8.0 {pr}`4925`
+- Upgraded `pyxirr` to 0.10.6 {pr}`4925`
+- Upgraded `regex` to 2024.9.11 {pr}`4925`
+- Upgraded `crc32c` to 2.7.1 {pr}`5169`
+- Upgraded `rebound` to 4.4.3 {pr}`5163`
+- Upgraded `reboundx` to 4.3.0 {pr}`5163`
+- Upgraded `msprime` to 1.3.3 {pr}`5159`
+- Upgraded `tskit` to 0.6.0 {pr}`5157`
+- Upgraded `pydantic_core` to 2.25.1 {pr}`5151`
+- Upgraded `pydantic` to 2.9.2 {pr}`5151`
+- Upgraded `msgpack` to 1.1.0 {pr}`5144`
+- Upgraded `protobuf` to 5.28.3 {pr}`5136`
+- Upgraded `scikit-learn` to 1.5.2 {pr}`4823`, {pr}`5016`, {pr}`5072`
+- Upgraded `libcst` to 1.4.0 {pr}`4856`
+- Upgraded `lakers` to 0.3.3 {pr}`4885`
+- Upgraded `certifi` to 2024.12.14 {pr}`5257`
+- Upgraded `bokeh` to 3.6.0 {pr}`4888`, {pr}`5047`, {pr}`5118`
+- Upgraded `awkward-cpp` to 43 {pr}`5214`, {pr}`5247`
+- Upgraded `zengl` to 2.7.1 {pr}`5258`
+- Upgraded `protobuf` to 5.29.1 {pr}`5257`
+- Upgraded `sourmash` to 4.8.11 {pr}`4980`
+- Upgraded `scipy` to 1.14.1 {pr}`4719`, {pr}`5011`, {pr}`5012`, {pr}`5031`
+- Upgraded `scikit-image` to 0.24.0 {pr}`5003`
+- Upgraded `statsmodels` to 0.14.4 {pr}`5058`
+- Upgraded `contourpy` to 1.3.0 {pr}`5048`
+- Upgraded `boost-histogram` to 1.5.0 {pr}`5074`
+- Upgraded `duckdb` to 1.1.0 {pr}`5078`
+- Upgraded `sympy` to 1.13.3 {pr}`5098`
+- Upgraded `tree-sitter` to 0.23.1 {pr}`5110`
+- Upgraded `altair` to 5.4.1 {pr}`5124`
+- Upgraded `PyYAML` to 6.0.2 {pr}`5137`
+- Upgraded `duckdb` to 1.1.2 {pr}`5142`
+- Upgraded `matplotlib` to 3.8.4 {pr}`4510`
+- Upgraded `matplotlib-pyodide` to 0.2.3 {pr}`4510`
+- Upgraded `cysignals` to 1.12.2 {pr}`5267`
+- Added `soxr` 0.5.0.post1 {pr}`5150`
+- Added `tiktoken` v0.8.0 in {pr}`5147`
+- Added `casadi` 3.6.7 {pr}`4936`, {pr}`5057`, {pr}`4925`
+- Added `pyarrow` 18.1.0 {pr}`4950`, {pr}`5266`
+- Added `polars` 1.18.0 {pr}`5282`
+- Added `rasterio` 1.4.2, `affine` 2.4.0 {pr}`4983`, {pr}`4925`
+- Added `iminuit` 2.30.1 {pr}`4767`, {pr}`5072`, {pr}`4925`
+- Added `rateslib` 1.6.0 {pr}`5146`, {pr}`5235`
+- Added `arro3-core`, `arro3-io`, and `arro3-compute` 0.3.0, 0.4.0, 0.4.1 {pr}`5020`, {pr}`5095`, {pr}`5104`
+- Added `tree-sitter` 0.23.0 {pr}`5099`
+- Added `tree-sitter-go` 0.23.1 {pr}`5102`
+- Added `tree-sitter-java` 0.23.2 {pr}`5102`
+- Added `tree-sitter-python` 0.23.2 {pr}`5102`
+- Added `Narwhals` 1.9.4 {pr}`5121`
+- Added `libzfp` and `zfpy` 1.0.1 {pr}`5172`
+- Added `vega-datasets` 0.9.0 {pr}`5183`
+- Added `clingo` 5.7.1 {pr}`5184`
+- Added `argon2-cffi` `argon2-cffi-bindings` 23.1.0 {pr}`5281`
+- Upgraded `tree-sitter` to 0.23.2 {pr}`5185`
+- Upgraded `tree-sitter-go` to 0.23.3 {pr}`5185`
+- Upgraded `tree-sitter-java` to 0.23.4 {pr}`5185`
+- Upgraded `tree-sitter-python` to 0.23.4 {pr}`5185`
+- Upgraded `xarray` to 2024.11.0 {pr}`5224`
+- Upgraded `lakers-python` to 0.4.1 {pr}`5225`
+- Upgraded `pure-eval` to 0.2.3 {pr}`5086`, {pr}`5244`
+- Upgraded `cffi` to 1.17.1 {pr}`5261`
+- Upgraded `pillow-heif` to 0.20.0 and `pyheif` 0.8.0 {pr}`5178`
+
+## Version 0.26.4
+
+_November 15, 2024_
+
+- {{ Fix }} JSPI support now works with support for new JSPI and no WebAssembly type reflection.
+  {pr}`5129`
+
+- {{ Fix }} Fix sessionStorage-related crash when running in sandboxed iframe.
+  {pr}`5186`
+
+- {{ Fix }} `JsFinder.find_spec()` no longer crashes when called during pytest test collection.
+  {pr}`5170`
+
+## Version 0.26.3
+
+_October 19, 2024_
+
+- {{ Performance }} Attribute lookup on a `JsProxy` is now about 40% faster.
+  {pr}`4961`
+
+- {{ Performance }} Method calls on a `JsProxy` are now much faster. If the
+  method has no arguments and no return value, it is about 80% faster. The
+  speedup for methods with arguments is less drastic but still quite a lot.
+  {pr}`4963`
+
+- {{ Enhancement }} Updated stack switching support to handle new JSPI.
+  {pr}`4982`
+
+- {{ Fix }} `pyimport("a.b")` won't fail when `a` is removed by `del sys.modules["a"]`
+  {pr}`4993`
+
+- {{ Fix }} It now works to convert a 0d Python buffer to JavaScript.
+  {pr}`5092`
+
+- {{ Fix }} It now works to convert buffers of 64 bit signed or unsigned integers to JavaScript.
+  {pr}`5092`
+
+## Version 0.26.2
+
+_July 26, 2024_
+
+- {{ Fix }} Don't leak the values in a dictionary when applying `to_js` to it.
+  {pr}`4853`
+
+- {{ Fix }} Loading of dynamic libraries now works slightly better in the cli
+  runner. Resolved {issue}`3865`.
+  {pr}`4871`
+
+- {{ Fix }} Restored the pre-0.26.0 behavior of calling `exit()` or raising
+  `SystemExit`. In 0.26.0 and 0.26.1, `exit()` shuts down the Python
+  interpreter. In all other versions of Pyodide it does not.
+  {pr}`4867`
+
+- {{ Fix }} Fixed a weird regression occurring in difficult to describe
+  circumstances introduced by {pr}`4837`. See {issue}`4861`.
+  {pr}`4861`
+
+- {{ Fix }} Recursive fortran functions now work correctly in scipy {issue}`4818`.
+  {pr}`4822`
+
+- {{ Enhancement }} Allow setting `dont_inherit` and `optimize` for `compile`
+  in `CodeRunner` and `Console`.
+  {pr}`4897`
+
+- {{ Fix }} Fixed a bug that caused `Console`'s `formatted_traceback` being truncated
+  unexpectedly when `filename` is specified.
+  {pr}`4905`
+
+- {{ Fix }} Locked `PyodideConsole.runcode` to block `loadPackagesFromImports`.
+  {pr}`4905`
+
+- {{ Enhancement }} Added `checkAPIVersion` option to `loadPyodide` to allow
+  bootstrapping pyodide with a different version.
+  {pr}`4907`
+
+- {{ Enhancement }} Added `can_run_sync` to test whether or not `run_sync`
+  should work.
+  {pr}`4913`
+
+- {{ Fix }} Fixed a bug with the JSPI that made it interact incorrectly with
+  JavaScript code that iterates a `PyProxy`.
+  {pr}`4919`
+
+- {{ Fix }} Pyodide now loads correctly when `define` and `define.amd` are
+  defined in the global scope.
+  {pr}`4866`
+
+- {{ Fix }} Fixed keyboard input handling in SDL-based packages.
+  {pr}`4865`
+
+### Packages
+
+- Added `duckdb` 1.0.0 {pr}`4684`
+
+## Version 0.26.1
+
+_June 7, 2024_
+
+### Build system
+
+- {{ Fix }} Fix `pyodide config` command printing extra output.
+  {pr}`4814`
+
+- {{ Enhancement }} Added implementation to read build settings from `pyproject.toml`.
+  {pr}`4831`
+
+- {{ Fix }} In the Pyodide virtual environment, pip sees `platform.system()` as
+  "Emscripten" and not as "emscripten".
+  {pr}`4812`
+
+- {{ Fix }} Resolution of JavaScript symbols in dynamic libraries doesn't fail
+  anymore in the command line runner.
+  {pr}`4836`
+
+- {{ Fix }} Pyodide virtual environments now work correctly in Fedora and other
+  platforms with platlibdir not equal to "lib".
+  {pr}`4844`
+
+### Runtime / FFI
+
+- {{ Enhancement }} Added the `enableRunUntilComplete` option to `loadPyodide`
+  which makes `run_until_complete` block using stack switching, or crash if
+  stack switching is disabled.
+  {pr}`4817`
+
+- {{ Fix }} Resolved an issue where string keys in `PyProxyJsonAdaptor` were
+  unexpectedly cast to numbers.
+  {pr}`4825`
+
+- {{ Fix }} When a `Future` connected to a `Promise` is cancelled, don't raise
+  `InvalidStateError`.
+  {pr}`4837`
+
+### Packages
+
+- New Packages: `pytest-asyncio` {pr}`4819`
+
+## Version 0.26.0
+
+_May 27, 2024_
+
+### General
+
+- {{ Update }} Upgraded Python to v3.12.1
+  {pr}`4431` {pr}`4435`
+
+- {{ Update }} The wheel tag for Pyodide wheels has changed to pyodide_2024_0_wasm32.
+  {pr}`4777`, {pr}`4780`
+
+- {{ Enhancement }} ABI Break: Updated Emscripten to version 3.1.58
+  {pr}`4399` {pr}`4715`
+
+- {{ Breaking }} Pyodide will not fallback to `node-fetch` anymore when `fetch`
+  is not available in the Node.js < 18 environment.
+  {pr}`4417`
+
+- {{ Enhancement }} Improved support for stack switching.
+  {pr}`4532`, {pr}`4547`, {pr}`4615`, {pr}`4639`
+
+- {{ Breaking }} The experimental `callSyncifying` method was renamed to
+  `callPromising`.
+  {pr}`4608`
+
+- {{ Fix }} `dup` now works correctly in the Node filesystem.
+  {pr}`4554`
+
+- {{ Enhancement }} `asyncio.sleep(0)` now runs the next task a lot faster.
+  {pr}`4590`
+
+### JavaScript APIs
+
+- {{ Enhancement }} `pyodide.loadPackage` now checks if the cache directory
+  exists and calls `mkdir` only when it doesn't to avoid an error on read-only
+  file systems in Node.js environment.
+  {pr}`4738`
+
+- {{ Fix }} `pyodide.mountNativeFS` will no longer silently overwrite an
+  existing nonempty directory. Also it throws much clearer error messages when
+  it fails.
+  {pr}`4559`
+
+- {{ Enhancement }} Added a new API `pyodide.mountNodeFS` which mounts a host
+  directory into the Pyodide file system when running in node.
+  {pr}`4561`
+
+- {{ Enhancement }} Updated `pyimport` to support `pyimport("module.attribute")`.
+  {pr}`4395`
+
+### FFI
+
+- {{ Enhancement }} `str(jsproxy)` has been adjusted to not raise an error if
+  `jsproxy.toString` is undefined. Instead, it will use
+  `Object.prototype.toString` in this case. If `jsproxy.toString` is defined and
+  throws or is not defined but `jsproxy[Symbol.toStringTag]` is defined and
+  throws, then `str` will still raise.
+  {pr}`4574`
+
+- {{ Enhancement }} Fixed a memory leak when iterating over a PyProxy.
+  {pr}`4546`
+
+- {{ Enhancement }} When a dictionary is converted to JavaScript with `toJs` the
+  result is now a `LiteralMap`. String keys are accessible via direct property
+  access unless they match a function on the `Map` prototype.
+  {pr}`4576`
+
+- {{ Fix }} `toJs` now works as expected on subclasses of `dict`.
+  {pr}`4637`
+
+- {{ Enhancement }} Added `PyProxy.asJsJson` method to adapt between Python JSON
+  (lists and dicts) and JavaScript JSON (Arrays and Objects).
+  {pr}`4666`
+
+- {{ Enhancement }} Added a new `callRelaxed` to PyProxies of callables that
+  discards extra arguments rather than raising a `TypeError``.
+{pr}`4392`
+
+- {{ Enhancement }} A new `callWithOptions` method was added to PyProxies of
+  callables.
+  {pr}`4608`
+
+### Build
+
+- {{ Fix }} pyodide-build now use response file when passing list of exported symbols to `emcc`.
+  This fixes "Argument list too long" error.
+  {pr}`4717``
+
+- {{ Fix }} Pass through `-E` (command mode) arguments in CMake wrapper
+  {pr}`4705`.
+
+- {{ Fix }} Fix exception handling in dynamic linking of int64 functions
+  {pr}`4698`.
+
+- {{ Breaking }} `pyodide-build` entrypoint is removed in favor of `pyodide`.
+  This entrypoint was deprecated since 0.22.0.
+  {pr}`4368`
+
+- {{ Breaking }} The `--no-deps` option to `pyodide build-recipes` has been
+  replaced with a separate subcommand `pyodide build-recipes-no-deps`.
+  {pr}`4443`
+
+- {{ Enhancement }} The `build/post` script now runs under the directory
+  where the built wheel is unpacked.
+  {pr}`4481`
+
+### Packages
+
+- New Packages: `cysignals`, `ppl`, `pplpy` {pr}`4407`, `flint`, `python-flint` {pr}`4410`,
+  `memory_allocator` {pr}`4393`, `primesieve`, `primecount`, `primecountpy` {pr}`4477`,
+  `pyxirr` {pr}`4513`, `ipython`, `asttokens`, `executing`, `prompt_toolkit`,
+  `pure_eval`, `stack_data`, `traitlets`, `wcwidth` {pr}`4452`, `altair` {pr}`4580`,
+  `cvxpy` {pr}`4587`, `clarabel` {pr}`4587`, `matplotlib-inline` {pr}`4626`,
+  `pygame-ce` {pr}`4602`, `libcst` {pr}`4665`, `mmh3`, `pyiceberg` {pr}`4648`,
+  `lakers-python` {pr}`4763`, `crc32c` {pr}`4789`, `zstandard` {pr}`4792`
+
+- Upgraded `contourpy` to 1.2.1 {pr}`4680`
+- Upgraded `sourmash` to 4.8.8 {pr}`4683`
+
+## Version 0.25.1
+
+_March 31, 2024_
+
+- {{ Fix }} Fixed pyodide-build to work with pypa/build>=1.2.
+  {pr}`4653`
+
+- {{ Fix }} Fixed a bug that pyodide-build setting `MESON` env variable,
+  which overwrites the binary path of meson.
+  {pr}`4502`
+
+## Version 0.25.0
+
+_January 18, 2024_
+
+### General
+
+- {{ Enhancement }} ABI Break: Updated Emscripten to version 3.1.46
+  {pr}`4359`
+
+- {{ Breaking }} Node.js < 18 is no longer officially supported. Older versions
+  of Node.js might still work, but they are not tested or guaranteed to work.
+  {pr}`4269`
+
+- {{ Enhancement }} Added experimental support for stack switching.
+  {pr}`3957`, {pr}`3964`, {pr}`3987`, {pr}`3990`, {pr}`3210`
+
+### JavaScript API
+
+- {{ Fix }} `pyodide.setStdin` now does not consider an empty string as EOF.
+  {pr}`4327`
+
+- {{ Breaking }} `loadPyodide` does not accept `homedir` option anymore, use
+  `env: {HOME: "/the/home/directory"}` instead. This have been deprecated since
+  Pyodide 0.24.
+  {pr}`4342`
+
+- {{ Enhancement }} `pyodide.loadPackage` now returns an object with metadata
+  about the loaded packages.
+  {pr}`4306`
+
+- {{ Fix }} Fixed default indexURL calculation in Node.js environment.
+  {pr}`4288`
+
+### Python API
+
+- {{ Enhancement }} The `pyodide-py` package on `pypi` now includes `py.typed`
+  markers so mypy will use the types.
+  {pr}`4321`
+
+- {{ Fix }} Fixed a bug that micropip would fail to install packages from
+  pyodide-lock.json if the package's name differs from its normalized name.
+  {pr}`4319`
+
+- {{ Enhancement }} Added a no-op `WebLoop.close` method so that attempts to
+  close the event loop will not raise an exception.
+  {pr}`4329`
+
+### Python / JavaScript Foreign Function Interface
+
+- {{ Fix }} `jsarray.pop` now works correctly. It previously returned the wrong
+  value and leaked memory.
+  {pr}`4236`
+
+- {{ Breaking }} `PyProxy.toString` now calls `str` instead of `repr`. For now
+  you can opt into the old behavior by passing `pyproxyToStringRepr: true` to
+  `loadPyodide`, but this may be removed in the future.
+  {pr}`4247`
+
+- {{ Fix }} when accessing a `JsProxy` attribute invokes a getter and the getter
+  throws an error, that error is propagated instead of being turned into an
+  `AttributeError`.
+  {pr}`4254`
+
+- {{ Fix }} `import type { PyProxy } from "pyodide/ffi"` now works with the
+  `NodeNext` typescript target.
+  {pr}`4256`
+
+- {{ Fix }} Fixed a bug that occurs when using `toJs` with both `dictConverter`
+  and `defaultConverter` arguments.
+  {pr}`4263`
+
+- {{ Enhancement }} Added `JsArray.remove` and `JsArray.insert` methods.
+  {pr}`4326`
+
+- {{ Breaking }} Type exports of `PyProxy` subtypes have been moved from
+  `pyodide` to `pyodide/ffi` and many of them have changed names.
+  {pr}`4342`
+
+- {{ Breaking }} The methods for checking `PyProxy` capabilities (e.g.,
+  `supportsHas`, `isCallable`) are now removed. Use e.g.,
+  `instanceof pyodide.ffi.PyCallable` instead.
+  {pr}`4342`
+
+### Pyodide CLI
+
+- {{ Enhancement }} `pyodide config` command now show additional config
+  variables: `rustflags`, `cmake_toolchain_file`, `pyo3_config_file`,
+  `rust_toolchain`, `cflags` `cxxflags`, `ldflags`, `meson_cross_file`. These
+  variables can be used in out-of-tree build to set the same variables as
+  in-tree build.
+  {pr}`4241`
+
+- {{ Enhancement }} `pyodide build` command now accepts `--config-setting`
+  (`-C`) option to pass flags to the build backend, just like `python -m build`
+  command.
+  {pr}`4308`
+
+### Load time & size optimizations
+
+- {{ Performance }} Do not use `importlib.metadata` when identifying installed
+  packages, which reduces the time to load Pyodide.
+  {pr}`4147`
+
+### Build system
+
+- {{ Fix }} Fixed `Emscripten.cmake` not vendored in pyodide-build since 0.24.0.
+  {pr}`4223`
+
+- {{ Fix }} pyodide-build now does not override `CMAKE_CONFIG_FILE` and
+  `PYO3_CONFIG_FILE` env variables if provided by user.
+  {pr}`4223`
+
+- {{ Fix }} Fixed a bug that webpack messes up dynamic import of `pyodide.asm.js`.
+  {pr}`4294`
+
+### Packages
+
+- New Packages: `river` {pr}`4197`, `sisl` {pr}`4210`, `frozenlist` {pr}`4231`,
+  `zengl` {pr}`4208`, `msgspec` {pr}`4265`, `aiohttp` {pr}`4282`, `pysam` {pr}`4268`,
+  `requests`, `urllib3` {pr}`4332`, `nh3` {pr}`4387`
+- Upgraded zengl to 2.2.0 {pr}`4364`
+
+## Version 0.24.1
+
+_September 25, 2023_
 
 - {{ Fix }} Fixed `LONG_BIT definition appears wrong for platform` error happened in out-of-tree build.
   {pr}`4136`
 
-### Load time & size optimizations
+- {{ Fix }} Fixed an Emscripten bug that broke some matplotlib functionality.
+  {pr}`4163`
 
-- {{ Performance }} Do not use `importlib.metadata` when identifying installed packages,
-  which reduces the time to load Pyodide.
-  {pr}`4147`
+- {{ Fix }} `pyodide.checkInterrupt` works when there is no interrupt buffer and
+  the gil is not held.
+  {pr}`4164`
 
 ### Packages
 
 - Upgraded scipy to 1.11.2 {pr}`4156`
 - Upgraded sourmash to 4.8.4 {pr}`4154`
-
 - Upgraded scikit-learn to 1.3.1 {pr}`4161`
+- Upgraded micropip to 0.5.0 {pr}`4167`
 
 ## Version 0.24.0
 

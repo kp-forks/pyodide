@@ -18,7 +18,27 @@ panels_add_bootstrap_css = False
 # -- Project information -----------------------------------------------------
 
 project = "Pyodide"
-copyright = "2019-2022, Pyodide contributors and Mozilla"
+author = "Pyodide contributors"
+copyright = "2019-2024, Pyodide contributors and Mozilla"
+
+suppress_warnings = ["config.cache"]
+nitpicky = True
+nitpick_ignore: list[tuple[str, str]] = []
+
+
+def ignore_typevars():
+    """These are all intentionally broken. Disable the warnings about it."""
+    PY_TYPEVARS_TO_IGNORE = ("T", "T_co", "T_contra", "V_co", "KT", "VT", "VT_co", "P")
+    JS_TYPEVARS_TO_IGNORE = ("TResult", "TResult1", "TResult2", "U")
+
+    nitpick_ignore.extend(
+        ("py:obj", f"_pyodide._core_docs.{typevar}")
+        for typevar in PY_TYPEVARS_TO_IGNORE
+    )
+    nitpick_ignore.extend(("js:func", typevar) for typevar in JS_TYPEVARS_TO_IGNORE)
+
+
+ignore_typevars()
 
 # -- General configuration ---------------------------------------------------
 
@@ -46,7 +66,7 @@ extensions = [
 myst_enable_extensions = ["substitution", "attrs_inline"]
 
 js_language = "typescript"
-jsdoc_config_path = "../src/js/tsconfig.json"
+jsdoc_tsconfig_path = "../src/js/tsconfig.json"
 root_for_relative_js_paths = "../src/"
 issues_github_path = "pyodide/pyodide"
 
@@ -60,9 +80,10 @@ versionwarning_message = (
 autosummary_generate = True
 autodoc_default_flags = ["members", "inherited-members"]
 
+micropip_version = micropip.__version__
 intersphinx_mapping = {
-    "python": ("https://docs.python.org/3.11", None),
-    "micropip": (f"https://micropip.pyodide.org/en/v{micropip.__version__}/", None),
+    "python": ("https://docs.python.org/3.12", None),
+    "micropip": (f"https://micropip.pyodide.org/en/v{micropip_version}/", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
 }
 
@@ -93,6 +114,8 @@ exclude_patterns = [
 pygments_style = None
 
 # -- Options for HTML output -------------------------------------------------
+
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "")
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -139,9 +162,7 @@ IN_READTHEDOCS_LATEST = (
 base_dir = Path(__file__).resolve().parent.parent
 extra_sys_path_dirs = [
     str(base_dir),
-    str(base_dir / "pyodide-build"),
     str(base_dir / "src/py"),
-    str(base_dir / "packages/micropip/src"),
 ]
 
 
@@ -169,7 +190,7 @@ def patch_inspect():
     import inspect
 
     if not hasattr(inspect, "getargspec"):
-        inspect.getargspec = inspect.getfullargspec  # type: ignore[assignment]
+        inspect.getargspec = inspect.getfullargspec  # type: ignore[attr-defined]
 
 
 def prevent_parens_after_js_class_xrefs():
@@ -242,6 +263,28 @@ def write_console_html(app):
     output_path = Path(app.outdir) / "console.html"
     output_path.write_text("".join(console_html_lines))
 
+    def remove_console_html():
+        Path("../dist/console.html").unlink(missing_ok=True)
+
+    atexit.register(remove_console_html)
+
+
+def write_examples(app):
+    """Preprocess the examples HTML/ js files and copy them to the output directory"""
+    example_outdir = Path(app.outdir) / "examples"
+    example_outdir.mkdir(exist_ok=True, parents=True)
+
+    example_html_dir = Path("./usage/examples")
+
+    for example in example_html_dir.iterdir():
+        if not example.is_file() or example.suffix not in [".html", ".js"]:
+            continue
+        text = example.read_text()
+        text = text.replace("{{ PYODIDE_BASE_URL }}", app.config.CDN_URL)
+
+        output_path = example_outdir / example.name
+        output_path.write_text(text)
+
 
 def ensure_typedoc_on_path():
     if shutil.which("typedoc"):
@@ -251,23 +294,13 @@ def ensure_typedoc_on_path():
     if shutil.which("typedoc"):
         return
     if IN_READTHEDOCS:
-        subprocess.run(["npm", "ci"], cwd="../src/js")
+        subprocess.run(["npm", "ci"], cwd="../src/js", check=True)
+        Path("../node_modules").symlink_to("../src/js/node_modules")
     if shutil.which("typedoc"):
         return
     raise Exception(
         "Before building the Pyodide docs you must run 'npm install' in 'src/js'."
     )
-
-
-def create_generated_typescript_files(app):
-    shutil.copy("../src/core/pyproxy.ts", "../src/js/pyproxy.gen.ts")
-    shutil.copy("../src/core/error_handling.ts", "../src/js/error_handling.gen.ts")
-    app.config.js_source_path = [str(x) for x in Path("../src/js").glob("*.ts")]
-
-    def remove_pyproxy_gen_ts():
-        Path("../src/js/pyproxy.gen.ts").unlink(missing_ok=True)
-
-    atexit.register(remove_pyproxy_gen_ts)
 
 
 def prune_webloop_docs():
@@ -319,6 +352,7 @@ def typehints_formatter(annotation, config):
         module = get_annotation_module(annotation)
         class_name = get_annotation_class_name(annotation, module)
     except ValueError:
+        assert annotation == Ellipsis
         return None
     full_name = f"{module}.{class_name}"
     if full_name == "typing.TypeVar":
@@ -327,6 +361,11 @@ def typehints_formatter(annotation, config):
         return f"``{annotation.__name__}``"
     if full_name == "ast.Module":
         return "`Module <https://docs.python.org/3/library/ast.html#module-ast>`_"
+    # TODO: perhaps a more consistent way to handle JS xrefs / type annotations?
+    if full_name == "pyodide.http.AbortController":
+        return ":js:class:`AbortController`"
+    if full_name == "pyodide.http.AbortSignal":
+        return ":js:class:`AbortSignal`"
     return None
 
 
@@ -334,12 +373,17 @@ def setup(app):
     sys.path = extra_sys_path_dirs + sys.path
     app.add_config_value("global_replacements", {}, True)
     app.add_config_value("CDN_URL", "", True)
+    files = []
+    for dir in ["core", "js"]:
+        files += [str(x) for x in (Path("../src") / dir).glob("*.ts")]
+    app.config.js_source_path = files
     app.connect("source-read", global_replace)
 
     set_announcement_message()
     apply_patches()
     calculate_pyodide_version(app)
     ensure_typedoc_on_path()
-    create_generated_typescript_files(app)
     write_console_html(app)
+    write_examples(app)
     prune_docs()
+    Path("../src/js/generated/pyproxy.ts").unlink(missing_ok=True)

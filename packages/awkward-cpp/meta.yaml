@@ -1,17 +1,15 @@
 package:
   name: awkward-cpp
-  version: 22
+  version: "43"
   top-level:
     - awkward_cpp
 
 source:
-  url: https://files.pythonhosted.org/packages/8b/f8/97efcc2d52e2f9967f9beed86ed6736fc6eed91eb2d974a1bdc8c438146d/awkward-cpp-22.tar.gz
-  sha256: 21679636fb21cfe3715f88a32326a579199384db2da4a62995c310502d7fe85f
+  url: https://files.pythonhosted.org/packages/c4/6b/b1ddc01206296322544247dfef8e1958292154b785a6d545bb12fb703d51/awkward_cpp-43.tar.gz
+  sha256: c1ed75596ec82af666da084b5bf805d9b72c83532d035d2b65e0795905d25ead
 
 build:
-  script: |
-    export CMAKE_ARGS="${CMAKE_ARGS} -DEMSCRIPTEN=1"
-  exports: whole_archive
+  exports: requested
 
 requirements:
   run:
@@ -25,3 +23,6 @@ about:
   home: https://pypi.org/project/awkward-cpp/
   summary: CPU kernels and compiled extensions for Awkward Array
   license: BSD-3-Clause
+extra:
+  recipe-maintainers:
+    - agoose77

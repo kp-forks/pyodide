@@ -126,6 +126,7 @@ returned. The following operations are currently supported on a {py:class}`~pyod
 | Python                             | JavaScript                        |
 | ---------------------------------- | --------------------------------- |
 | `str(proxy)`                       | `x.toString()`                    |
+| `repr(proxy)`                      | `x.toString()`                    |
 | `proxy.foo`                        | `x.foo`                           |
 | `proxy.foo = bar`                  | `x.foo = bar`                     |
 | `del proxy.foo`                    | `delete x.foo`                    |
@@ -235,6 +236,7 @@ operations are more cumbersome on a {js:class}`~pyodide.ffi.PyProxy` than on a
 
 | JavaScript                          | Python              |
 | ----------------------------------- | ------------------- |
+| `proxy.toString()`                  | `str(x)`            |
 | `foo in proxy`                      | `hasattr(x, 'foo')` |
 | `proxy.foo`                         | `x.foo`             |
 | `proxy.foo = bar`                   | `x.foo = bar`       |
@@ -571,12 +573,12 @@ An example of a case where you would not want to use the
 {js:func}`~pyodide.ffi.PyProxy.toJs` method is when the buffer is bitmapped
 image data. If for instance you have a 3d buffer shaped 1920 x 1080 x 4, then
 {js:func}`~pyodide.ffi.PyProxy.toJs` will be extremely slow. In this case you
-could use {js:func}`~pyodide.ffi.PyProxy.getBuffer`. On the other hand, if you
+could use {js:func}`~pyodide.ffi.PyBuffer.getBuffer`. On the other hand, if you
 have a 3d buffer shaped 1920 x 4 x 1080, the performance of
 {js:func}`~pyodide.ffi.PyProxy.toJs` will most likely be satisfactory.
 Typically, the innermost dimension won't matter for performance.
 
-The {js:func}`~pyodide.ffi.PyProxy.getBuffer` method can be used to retrieve a reference to
+The {js:func}`~pyodide.ffi.PyBuffer.getBuffer` method can be used to retrieve a reference to
 a JavaScript typed array that points to the data backing the Python object,
 combined with other metadata about the buffer format. The metadata is suitable
 for use with a JavaScript ndarray library if one is present. For instance, if
@@ -614,11 +616,11 @@ blocks. At the boundary between Python and JavaScript, errors are caught,
 converted between languages, and rethrown.
 
 JavaScript errors are wrapped in a {py:class}`~pyodide.ffi.JsException`.
-Python exceptions are converted to a {js:class}`~pyodide.PythonError`.
+Python exceptions are converted to a {js:class}`~pyodide.ffi.PythonError`.
 At present if an exception crosses between Python and JavaScript several times,
 the resulting error message won't be as useful as one might hope.
 
-In order to reduce memory leaks, the {js:class}`~pyodide.PythonError` has a
+In order to reduce memory leaks, the {js:class}`~pyodide.ffi.PythonError` has a
 formatted traceback, but no reference to the original Python exception. The
 original exception has references to the stack frame and leaking it will leak
 all the local variables from that stack frame. The actual Python exception will
@@ -738,7 +740,7 @@ pyodide.runPython(`
 console.log(my_js_namespace.y); // 7
 ```
 
-If the JavaScript object's name is a reserved Python keyword, the {py:func}`setattr` function can be used to access the object by name within the js module::
+If the JavaScript object's name is a reserved Python keyword, the {py:func}`getattr` function can be used to access the object by name within the js module::
 
 ```pyodide
 lambda = (x) => {return x + 1};

@@ -8,10 +8,10 @@ from asyncio import Future, Task
 from collections.abc import Awaitable, Callable
 from typing import Any, TypeVar, overload
 
-from .ffi import IN_BROWSER, create_once_callable
+from .ffi import IN_BROWSER, create_once_callable, run_sync
 
 if IN_BROWSER:
-    from js import setTimeout
+    from pyodide_js._api import scheduleCallback
 
 T = TypeVar("T")
 S = TypeVar("S")
@@ -30,32 +30,28 @@ class PyodideFuture(Future[T]):
         self,
         onfulfilled: None,
         onrejected: Callable[[BaseException], Awaitable[S]],
-    ) -> "PyodideFuture[S]":
-        ...
+    ) -> "PyodideFuture[S]": ...
 
     @overload
     def then(
         self,
         onfulfilled: None,
         onrejected: Callable[[BaseException], S],
-    ) -> "PyodideFuture[S]":
-        ...
+    ) -> "PyodideFuture[S]": ...
 
     @overload
     def then(
         self,
         onfulfilled: Callable[[T], Awaitable[S]],
         onrejected: Callable[[BaseException], Awaitable[S]] | None = None,
-    ) -> "PyodideFuture[S]":
-        ...
+    ) -> "PyodideFuture[S]": ...
 
     @overload
     def then(
         self,
         onfulfilled: Callable[[T], S],
         onrejected: Callable[[BaseException], S] | None = None,
-    ) -> "PyodideFuture[S]":
-        ...
+    ) -> "PyodideFuture[S]": ...
 
     def then(
         self,
@@ -117,7 +113,7 @@ class PyodideFuture(Future[T]):
             except Exception as result_exception:
                 result.set_exception(result_exception)
                 return
-            result.set_result(r)  # type:ignore[arg-type]
+            result.set_result(r)
 
         def wrapper(fut: Future[T]) -> None:
             asyncio.ensure_future(callback(fut))
@@ -128,12 +124,10 @@ class PyodideFuture(Future[T]):
     @overload
     def catch(
         self, onrejected: Callable[[BaseException], Awaitable[S]]
-    ) -> "PyodideFuture[S]":
-        ...
+    ) -> "PyodideFuture[S]": ...
 
     @overload
-    def catch(self, onrejected: Callable[[BaseException], S]) -> "PyodideFuture[S]":
-        ...
+    def catch(self, onrejected: Callable[[BaseException], S]) -> "PyodideFuture[S]": ...
 
     def catch(
         self, onrejected: Callable[[BaseException], object]
@@ -141,7 +135,7 @@ class PyodideFuture(Future[T]):
         """Equivalent to ``then(None, onrejected)``"""
         return self.then(None, onrejected)
 
-    def finally_(self, onfinally: Callable[[], None]) -> "PyodideFuture[T]":
+    def finally_(self, onfinally: Callable[[], Any]) -> "PyodideFuture[T]":
         """When the future is either resolved or rejected, call ``onfinally`` with
         no arguments.
         """
@@ -229,6 +223,10 @@ class WebLoop(asyncio.AbstractEventLoop):
         """
         return False
 
+    def close(self) -> None:
+        """Ignore request to close WebLoop"""
+        pass
+
     def _check_closed(self):
         """Used in create_task.
 
@@ -261,13 +259,17 @@ class WebLoop(asyncio.AbstractEventLoop):
             do_something_with_result(result)
         ```
         """
+        from pyodide_js._api import config
+
+        if config.enableRunUntilComplete:
+            return run_sync(future)
         return asyncio.ensure_future(future)
 
     #
     # Scheduling methods: use browser.setTimeout to schedule tasks on the browser event loop.
     #
 
-    def call_soon(
+    def call_soon(  # type: ignore[override]
         self,
         callback: Callable[..., Any],
         *args: Any,
@@ -283,7 +285,7 @@ class WebLoop(asyncio.AbstractEventLoop):
         delay = 0
         return self.call_later(delay, callback, *args, context=context)
 
-    def call_soon_threadsafe(
+    def call_soon_threadsafe(  # type: ignore[override]
         self,
         callback: Callable[..., Any],
         *args: Any,
@@ -339,7 +341,10 @@ class WebLoop(asyncio.AbstractEventLoop):
                 else:
                     raise
 
-        setTimeout(create_once_callable(run_handle), delay * 1000)
+        scheduleCallback(
+            create_once_callable(run_handle, _may_syncify=True), delay * 1000
+        )
+
         return h
 
     def _decrement_in_progress(self, *args):
@@ -364,7 +369,7 @@ class WebLoop(asyncio.AbstractEventLoop):
         delay = when - cur_time
         return self.call_later(delay, callback, *args, context=context)
 
-    def run_in_executor(self, executor, func, *args):
+    def run_in_executor(self, executor, func, *args):  # type: ignore[override]
         """Arrange for func to be called in the specified executor.
 
         This is normally supposed to run func(*args) in a separate process or
@@ -402,7 +407,7 @@ class WebLoop(asyncio.AbstractEventLoop):
         """
         return time.monotonic()
 
-    def create_task(self, coro, *, name=None):
+    def create_task(self, coro, *, name=None):  # type: ignore[override]
         """Schedule a coroutine object.
 
         Return a task object.

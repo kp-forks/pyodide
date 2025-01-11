@@ -1,11 +1,11 @@
 package:
   name: cftime
-  version: 1.6.2
+  version: 1.6.4.post1
   top-level:
     - cftime
 source:
-  url: https://files.pythonhosted.org/packages/cd/db/c528f26ee2dbac1dc348189386c2df745770bb22c02542e281d60212cb13/cftime-1.6.2.tar.gz
-  sha256: 8614c00fb8a5046de304fdd86dbd224f99408185d7b245ac6628d0276596e6d2
+  url: https://files.pythonhosted.org/packages/ab/c8/1155d1d58003105307c7e5985f422ae5bcb2ca0cbc553cc828f3c5a934a7/cftime-1.6.4.post1.tar.gz
+  sha256: 50ac76cc9f10ab7bd46e44a71c51a6927051b499b4407df4f29ab13d741b942f
 
 requirements:
   run:
@@ -17,4 +17,4 @@ about:
   home: https://github.com/Unidata/cftime
   PyPI: https://pypi.org/project/cftime
   summary: Time-handling functionality from netcdf4-python
-  license: "License :: OSI Approved :: MIT License"
+  license: MIT
