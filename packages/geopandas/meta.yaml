@@ -1,11 +1,11 @@
 package:
   name: geopandas
-  version: 0.12.2
+  version: 1.0.1
   top-level:
     - geopandas
 source:
-  url: https://files.pythonhosted.org/packages/45/75/a1ee660822db6e965b0862b4b1e8cfd55e7314ef8349ec92515f036d8a6a/geopandas-0.12.2-py3-none-any.whl
-  sha256: 0a470e4bf6f5367e6fd83ab6b40405e0b805c8174665bbcb7c4077ed90202912
+  url: https://files.pythonhosted.org/packages/c4/64/7d344cfcef5efddf9cf32f59af7f855828e9d74b5f862eddf5bfd9f25323/geopandas-1.0.1-py3-none-any.whl
+  sha256: 01e147d9420cc374d26f51fc23716ac307f32b49406e4bd8462c07e82ed1d3d6
 requirements:
   run:
     - shapely
@@ -18,4 +18,4 @@ about:
   home: http://geopandas.org
   PyPI: https://pypi.org/project/geopandas
   summary: Geographic pandas extensions
-  license: BSD
+  license: BSD-3-Clause
