@@ -16,6 +16,8 @@ build:
 requirements:
   executable:
     - rustup
+  constraint:
+    - maturin < 1.8
 test:
   imports:
     - pyxel
@@ -23,3 +25,4 @@ about:
   home: https://github.com/kitao/pyxel
   PyPI: https://pypi.org/project/pyxel/
   summary: A retro game engine for Python
+  license: MIT

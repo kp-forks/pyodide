@@ -15,10 +15,15 @@ export type {
   PyCallable,
   PyBuffer,
   PyBufferView,
-  TypedArray,
-} from "./pyproxy.gen";
+  PySequence,
+  PyMutableSequence,
+} from "generated/pyproxy";
+export type { PythonError } from "generated/error_handling";
+// These need to be imported for their side effects at startup
+import "generated/js2python";
+import "generated/python2js_buffer";
 
-export type { PythonError } from "./error_handling.gen";
+export type { TypedArray } from "./types";
 
 import {
   PyProxy,
@@ -39,13 +44,16 @@ import {
   PyBufferView,
   PySequence,
   PyMutableSequence,
-} from "./pyproxy.gen";
+} from "generated/pyproxy";
 
-import { PythonError } from "./error_handling.gen";
+import { PythonError } from "../core/error_handling";
 
 /**
- * See :ref:`js-api-pyodide-ffi`
+ * Foreign function interface classes. Can be used for typescript type
+ * annotations or at runtime for `instanceof` checks.
+ * @summaryLink :ref:`ffi <js-api-pyodide-ffi>`
  * @hidetype
+ * @omitFromAutoModule
  */
 export const ffi = {
   PyProxy,

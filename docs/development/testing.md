@@ -18,7 +18,7 @@ and third-party applications that use Pyodide.
 > See: [pytest-pyodide](https://github.com/pyodide/pytest-pyodide) for more information.
 
 2. Install [geckodriver](https://github.com/mozilla/geckodriver/releases) or
-   [chromedriver](https://sites.google.com/a/chromium.org/chromedriver/downloads)
+   [chromedriver](https://developer.chrome.com/docs/chromedriver/downloads)
    and check that they are in your `PATH`.
 
 3. To run the test suite, run `pytest` from the root directory of Pyodide:
@@ -27,11 +27,9 @@ and third-party applications that use Pyodide.
 pytest
 ```
 
-There are 3 test locations that are collected by pytest,
+There are 2 test locations that are collected by pytest,
 
 - `src/tests/`: general Pyodide tests and tests running the CPython test suite
-- `pyodide-build/pyodide_build/tests/`: tests related to Pyodide build system
-  (do not require selenium or playwright to run)
 - `packages/*/test_*`: package specific tests.
 
 You can run the tests from a specific file with:
