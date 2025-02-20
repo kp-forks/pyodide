@@ -1,11 +1,11 @@
 package:
   name: astropy
-  version: 5.3.2
+  version: 7.0.0
   top-level:
     - astropy
 source:
-  url: https://files.pythonhosted.org/packages/5d/2a/0bb1e43f5643e47208e53882414f088f13d52b890b9349fa2c1c108d0e31/astropy-5.3.2.tar.gz
-  sha256: 222003dedd4d1ad00cf3b3a02747fd59c4fc93a97ddbe6328952916ad5f1558f
+  url: https://files.pythonhosted.org/packages/6a/12/d6ad68d5acd751e3827d54a64333e0dd789bcc747fe9528f5758b35421f8/astropy-7.0.0.tar.gz
+  sha256: e92d7c9fee86eb3df8714e5dd41bbf9f163d343e1a183d95bf6bd09e4313c940
 build:
   # The test module is imported from the top level `__init__.py`
   # so it cannot be unvendored
@@ -18,11 +18,11 @@ requirements:
     - packaging
     - numpy
   run:
-    - distutils
     - packaging
     - numpy
     - pyerfa
     - pyyaml
+    - astropy_iers_data
 test:
   imports:
     - astropy
@@ -49,4 +49,7 @@ about:
   home: http://astropy.org
   PyPI: https://pypi.org/project/astropy
   summary: Astronomy and astrophysics core library
-  license: BSD 3-Clause License
+  license: BSD-3-Clause
+extra:
+  recipe-maintainers:
+    - jobovy

@@ -1,6 +1,7 @@
 """
 A library of helper utilities for connecting Python to the browser environment.
 """
+
 # Added by C:
 # JsException (from jsproxy.c)
 
@@ -10,6 +11,7 @@ import linecache
 import tokenize
 from collections.abc import Generator
 from copy import deepcopy
+from importlib import import_module
 from io import StringIO
 from textwrap import dedent
 from types import CodeType
@@ -131,6 +133,8 @@ def _parse_and_compile_gen(
     mode: str = "exec",
     filename: str = "<exec>",
     flags: int = 0x0,
+    dont_inherit: bool = False,
+    optimize: int = -1,
 ) -> Generator[ast.Module, ast.Module, CodeType]:
     """Parse ``source``, then yield the AST, then compile the AST and return the
     code object.
@@ -159,7 +163,7 @@ def _parse_and_compile_gen(
         _last_expr_to_raise(mod)
 
     ast.fix_missing_locations(mod)
-    return compile(mod, filename, mode, flags=flags)
+    return compile(mod, filename, mode, flags, dont_inherit, optimize)
 
 
 ReturnMode = Literal["last_expr", "last_expr_or_assign", "none"]
@@ -213,21 +217,30 @@ class CodeRunner:
         The flags to compile with. See the documentation for the built-in
         :external:py:func:`compile` function.
 
+    dont_inherit :
+
+        Whether to inherit ``__future__`` imports from the outer code.
+        See the documentation for the built-in :external:py:func:`compile` function.
+
+    optimize :
+
+        Specifies the optimization level of the compiler. See the documentation
+        for the built-in :external:py:func:`compile` function.
+
     Examples
     --------
-    >>> from pyodide.code import CodeRunner
     >>> source = "1 + 1"
     >>> code_runner = CodeRunner(source)
-    >>> code_runner.compile()
-    <_pyodide._base.CodeRunner object at 0x113de58>
+    >>> code_runner.compile() # doctest: +ELLIPSIS
+    <_pyodide._base.CodeRunner object at 0x...>
     >>> code_runner.run()
     2
     >>> my_globals = {"x": 20}
     >>> my_locals = {"y": 5}
     >>> source = "x + y"
     >>> code_runner = CodeRunner(source)
-    >>> code_runner.compile()
-    <_pyodide._base.CodeRunner object at 0x1166bb0>
+    >>> code_runner.compile() # doctest: +ELLIPSIS
+    <_pyodide._base.CodeRunner object at 0x...>
     >>> code_runner.run(globals=my_globals, locals=my_locals)
     25
     """
@@ -254,6 +267,8 @@ class CodeRunner:
         quiet_trailing_semicolon: bool = True,
         filename: str = "<exec>",
         flags: int = 0x0,
+        dont_inherit: bool = False,
+        optimize: int = -1,
     ):
         self._compiled = False
         self._source = source
@@ -264,6 +279,8 @@ class CodeRunner:
             quiet_trailing_semicolon=quiet_trailing_semicolon,
             filename=filename,
             flags=flags,
+            dont_inherit=dont_inherit,
+            optimize=optimize,
         )
         self.ast = next(self._gen)
 
@@ -407,6 +424,8 @@ def eval_code(
     quiet_trailing_semicolon: bool = True,
     filename: str = "<exec>",
     flags: int = 0x0,
+    dont_inherit: bool = False,
+    optimize: int = -1,
 ) -> Any:
     """Runs a string as Python source code.
 
@@ -464,7 +483,6 @@ def eval_code(
 
     Examples
     --------
-    >>> from pyodide.code import eval_code
     >>> source = "1 + 1"
     >>> eval_code(source)
     2
@@ -483,9 +501,13 @@ def eval_code(
     >>> eval_code(source, return_mode="last_expr")
     >>> eval_code(source, return_mode="none")
     >>> source = "print(pyodide)" # Pretend this is open('example_of_filename.py', 'r').read()
-    >>> eval_code(source, filename="example_of_filename.py") # doctest: +SKIP
-    # Trackback will show where in the file the error happened
-    # ...File "example_of_filename.py", line 1, in <module>...NameError: name 'pyodide' is not defined
+    >>> eval_code(source, filename="example_of_filename.py")
+    Traceback (most recent call last):
+        ...
+        File "example_of_filename.py", line 1, in <module>
+            print(pyodide)
+                  ^^^^^^^
+    NameError: name 'pyodide' is not defined
     """
     return (
         CodeRunner(
@@ -494,6 +516,8 @@ def eval_code(
             quiet_trailing_semicolon=quiet_trailing_semicolon,
             filename=filename,
             flags=flags,
+            dont_inherit=dont_inherit,
+            optimize=optimize,
         )
         .compile()
         .run(globals, locals)
@@ -509,6 +533,8 @@ async def eval_code_async(
     quiet_trailing_semicolon: bool = True,
     filename: str = "<exec>",
     flags: int = 0x0,
+    dont_inherit: bool = False,
+    optimize: int = -1,
 ) -> Any:
     """Runs a code string asynchronously.
 
@@ -574,10 +600,20 @@ async def eval_code_async(
             quiet_trailing_semicolon=quiet_trailing_semicolon,
             filename=filename,
             flags=flags,
+            dont_inherit=dont_inherit,
+            optimize=optimize,
         )
         .compile()
         .run_async(globals, locals)
     )
+
+
+def _add_prefixes(s: set[str], mod: str) -> None:
+    [current, *rest] = mod.split(".")
+    s.add(current)
+    for part in rest:
+        current += f".{part}"
+        s.add(current)
 
 
 def find_imports(source: str) -> list[str]:
@@ -591,15 +627,18 @@ def find_imports(source: str) -> list[str]:
 
     Returns
     -------
-        A list of module names that are imported in ``source``. If ``source`` is not
-        syntactically correct Python code (after dedenting), returns an empty list.
+        A list of module names that are imported in ``source``. If ``source`` is
+        not syntactically correct Python code (after dedenting), returns an
+        empty list.
+
+        Given `import package.module`, `find_imports` will include both
+        `"package"` and `"package.module"` in the result.
 
     Examples
     --------
-    >>> from pyodide.code import find_imports
     >>> source = "import numpy as np; import scipy.stats"
     >>> find_imports(source)
-    ['numpy', 'scipy']
+    ['numpy', 'scipy', 'scipy.stats']
     """
     # handle mis-indented input from multi-line strings
     source = dedent(source)
@@ -608,15 +647,26 @@ def find_imports(source: str) -> list[str]:
         mod = ast.parse(source)
     except SyntaxError:
         return []
-    imports = set()
+    imports: set[str] = set()
     for node in ast.walk(mod):
         if isinstance(node, ast.Import):
             for name in node.names:
                 node_name = name.name
-                imports.add(node_name.split(".")[0])
+                _add_prefixes(imports, node_name)
         elif isinstance(node, ast.ImportFrom):
             module_name = node.module
             if module_name is None:
                 continue
-            imports.add(module_name.split(".")[0])
-    return list(sorted(imports))
+            _add_prefixes(imports, module_name)
+    return sorted(imports)
+
+
+def pyimport_impl(path: str) -> Any:
+    [stem, *fromlist] = path.rsplit(".", 1)
+    res = __import__(stem, fromlist=fromlist)
+    if fromlist:
+        try:
+            res = getattr(res, fromlist[0])
+        except AttributeError:
+            res = import_module(path)
+    return res

@@ -1,12 +1,12 @@
 package:
   name: xarray
-  version: 2023.8.0
+  version: 2025.01.2
 
   top-level:
     - xarray
 source:
-  url: https://files.pythonhosted.org/packages/cc/21/c3a9d3017c131cea3c2967957b05448ffc81cafced239796bbbdc98073e4/xarray-2023.8.0-py3-none-any.whl
-  sha256: eb42b56aea2c7d5db2a7d0c33fb005b78eb5c4421eb747f2ced138c70b5c204e
+  url: https://files.pythonhosted.org/packages/05/79/4e19100342fe13d69fd6e77b343e2269924fec681258e2ea21b55576aad2/xarray-2025.1.2-py3-none-any.whl
+  sha256: a7ad6a36c6e0becd67f8aff6a7808d20e4bdcd344debb5205f0a34b1a4a7f8d6
 requirements:
   run:
     - numpy
@@ -16,4 +16,4 @@ about:
   home: https://github.com/pydata/xarray
   PyPI: https://pypi.org/project/xarray
   summary: N-D labeled arrays and datasets in Python
-  license: Apache
+  license: Apache-2.0
