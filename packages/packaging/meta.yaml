@@ -1,12 +1,13 @@
 package:
   name: packaging
-  version: "23.1"
+  version: "24.2"
   top-level:
     - packaging
 source:
-  sha256: a392980d2b6cffa644431898be54b0045151319d1e7ec34f0cfed48767dd334f
-  url: https://files.pythonhosted.org/packages/b9/6c/7c6658d258d7971c5eb0d9b69fa9265879ec9a9158031206d47800ae2213/packaging-23.1.tar.gz
-
+  sha256: c228a6dc5e932d346bc5739379109d49e8853dd8223571c7c5b55260edc0b97f
+  url: https://files.pythonhosted.org/packages/d0/63/68dbb6eb2de9cb10ee4c9c14a0148804425e13c4fb20d61cce69f53106da/packaging-24.2.tar.gz
+  patches:
+    - patches/0001-Add-Pyodide-compatibility.patch
 about:
   home: https://github.com/pypa/packaging
   PyPI: https://pypi.org/project/packaging

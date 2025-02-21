@@ -2,7 +2,8 @@
 *.o
 *.pyc
 *.gen.*
-src/js/*.out.*
+src/js/generated
+*.out.*
 
 *.egg-info/
 
@@ -16,24 +17,28 @@ __pycache__
 .pytest_cache/
 .vscode
 .venv*
+tsconfig.tsbuildinfo
 
 build
 ccache
 cpython/downloads
 cpython/installs
 cpython/build.log
-dist/
+dist*/
 docs/_build/
 emsdk/emsdk
+emsdk/emscripten
 geckodriver.log
 node_modules
 packages/.artifacts
+packages/.build
 packages/.libs
 packages/*/build.log*
 packages/build-logs
 dist/
-pyodide-build/**/build.log
 xbuildenv/
 pytest-pyodide
 tools/symlinks
 xbuildenv/
+.pyodide-xbuildenv*
+DS_Store
