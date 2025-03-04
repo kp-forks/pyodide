@@ -13,11 +13,17 @@ DATA = {
         "Reflect.ownKeys": "$global/",
         "Array.from": "$global/",
         "Atomics.wait": "$global/",
+        "getDirectory": "API/StorageManager/",
+        "showDirectoryPicker": "API/Window/",
     },
     "js:class": {
+        "AbortController": "API/",
+        "AbortSignal": "API/",
         "Array": "$global/",
         "NodeList": "API/",
+        "XMLHttpRequest": "API/",
         "HTMLCollection": "API/",
+        "HTMLCanvasElement": "API/",
         "Generator": "$global/",
         "AsyncGenerator": "$global/",
         "Date": "$global/",
@@ -28,12 +34,22 @@ DATA = {
         "TextDecoder": "$global/",
         "DataView": "$global/",
         "Uint8Array": "$global/",
+        "Int8Array": "$global/",
+        "Uint16Array": "$global/",
+        "Int16Array": "$global/",
+        "Uint32Array": "$global/",
+        "Int32Array": "$global/",
+        "Uint8ClampedArray": "$global/",
+        "Float32Array": "$global/",
+        "Float64Array": "$global/",
         "Map": "$global/",
+        "Response": "API/",
         "Set": "$global/",
         # the JavaScript domain has no exception type for some reason...
         "Error": "$global/",
         "Function": "$global/",
         "Promise": "$global/",
+        "PromiseLike": "$global/Promise#thenables",
         "FileSystemDirectoryHandle": "API/",
     },
     "js:method": {
@@ -56,6 +72,15 @@ DATA = {
         "Function.bind": "$global/",
         "Function.call": "$global/",
         "Array.join": "$global/",
+        "Array.copyWithin": "$global/",
+        "Array.fill": "$global/",
+        "Array.pop": "$global/",
+        "Array.push": "$global/",
+        "Array.reverse": "$global/",
+        "Array.shift": "$global/",
+        "Array.sort": "$global/",
+        "Array.splice": "$global/",
+        "Array.unshift": "$global/",
         "Array.slice": "$global/",
         "Array.lastIndexOf": "$global/",
         "Array.indexOf": "$global/",
@@ -142,11 +167,24 @@ for type, entries in DATA.items():
             USE_NAME_AS_LINK_TEXT,
         )
 
-for key, url in [
-    ("void", "https://www.typescriptlang.org/docs/handbook/2/functions.html#void"),
-    ("any", "https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#any"),
+for ty, key, url in [
+    (
+        "js:data",
+        "void",
+        "https://www.typescriptlang.org/docs/handbook/2/functions.html#void",
+    ),
+    (
+        "js:data",
+        "any",
+        "https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#any",
+    ),
+    (
+        "js:class",
+        "Record",
+        "https://www.typescriptlang.org/docs/handbook/utility-types.html#recordkeys-type",
+    ),
 ]:
-    INVDATA["js:data"][key] = (
+    INVDATA[ty][key] = (
         "typescript docs",
         "",
         url,

@@ -4,46 +4,7 @@
 
 ## How can I load external files in Pyodide?
 
-If you are using Pyodide in the browser, you should download external files and
-save them to the virtual file system. The recommended way to do this is to zip
-the files and unpack them into the file system with
-{js:func}`pyodide.unpackArchive`:
-
-```pyodide
-let zipResponse = await fetch("myfiles.zip");
-let zipBinary = await zipResponse.arrayBuffer();
-pyodide.unpackArchive(zipBinary, "zip");
-```
-
-You can also download the files from Python using
-{py:func}`~pyodide.http.pyfetch`, which is a convenient wrapper of JavaScript
-{js:func}`fetch`:
-
-```pyodide
-await pyodide.runPythonAsync(`
-  from pyodide.http import pyfetch
-  response = await pyfetch("https://some_url/myfiles.zip")
-  await response.unpack_archive()
-`)
-```
-
-If you are working in Node.js, you can mount a native folder into the file
-system as follows:
-
-```pyodide
-FS.mkdir("/local_directory");
-FS.mount(NODEFS, { root: "some/local/filepath" }, "/local_directory");
-```
-
-Then you can access the mounted folder from Python via the `/local_directory`
-mount.
-
-```{admonition} Why can't I just use urllib or requests?
-:class: warning
-
-We currently can’t use such packages since sockets are not available in Pyodide.
-See {ref}`http-client-limit` for more information.
-```
+See {ref}`accessing_files_quickref`.
 
 ## Why can't I load files from the local file system?
 
@@ -507,4 +468,48 @@ pyodide.runPython(`
     js_lambda__ = getattr(js, 'lambda__')
     print(js_lambda, js_lambda_, js_lambda__) # 7, 7, 8
 `);
+```
+
+## Can I use threading/multiprocessing/subprocess?
+
+No, fork and pthreads do not work in Pyodide (see more [here](https://pyodide.org/en/stable/usage/wasm-constraints.html)).
+Attempts to use `threading`, `multiprocessing`, or `subprocess` will raise a `RuntimeError`.
+You may be able to work around this by setting the number of threads to 1:
+
+```py
+def _can_start_thread() -> bool:
+    if sys.platform == "emscripten":
+        return sys._emscripten_info.pthreads
+    return platform.machine() not in ("wasm32", "wasm64")
+
+can_start_thread = _can_start_thread()
+
+if not can_start_thread:
+  n_threads = 1
+```
+
+You can still import the packages and use the general info API, but you cannot
+start any asynchronous work without receiving a `RuntimeError`.
+
+```pycon
+>>> import threading
+>>> current = threading.current_thread()
+>>> current.name
+'MainThread'
+>>> current.daemon
+False
+>>> current.is_alive()
+True
+>>> def target(nums):
+...     print(sum(nums))
+...
+>>> t = threading.Thread(target=target, args=([1, 2, 3], ))
+>>> t.run()
+6
+>>> t.start()
+Traceback (most recent call last):
+  File "<console>", line 1, in <module>
+  File "/lib/python312.zip/threading.py", line 994, in start
+    _start_new_thread(self._bootstrap, ())
+RuntimeError: can't start new thread
 ```

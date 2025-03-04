@@ -1,15 +1,19 @@
-import { IN_NODE } from "./compat.js";
+import { IN_NODE } from "./environments.js";
 import "./constants";
 
-import type { FSStream, FSStreamOpsGen } from "./module";
-const fs: any = IN_NODE ? require("fs") : undefined;
-const tty: any = IN_NODE ? require("tty") : undefined;
+import type { FSStream, FSStreamOpsGen } from "./types";
+const fs: any = IN_NODE ? require("node:fs") : undefined;
+const tty: any = IN_NODE ? require("node:tty") : undefined;
 
 function nodeFsync(fd: number): void {
   try {
     fs.fsyncSync(fd);
   } catch (e: any) {
-    if (e && e.code === "EINVAL") {
+    if (e?.code === "EINVAL") {
+      return;
+    }
+    // On mac, calling fsync on stdout/stderr when not isatty returns ENOTSUP
+    if (e?.code === "ENOTSUP" && (fd === 1 || fd === 2)) {
       return;
     }
     throw e;
@@ -38,7 +42,7 @@ declare var FS: typeof Module.FS;
 
 // The type of the function we expect the user to give us. make_get_char takes
 // one of these and turns it into a GetCharType function for us.
-/** @private */
+/** @hidden */
 export type InFuncType = () =>
   | null
   | undefined
@@ -323,8 +327,7 @@ type StdinOptions = {
  *
  *    If a string is returned, it is encoded into a buffer using
  *    :js:class:`TextEncoder`. By default, an EOF is appended after each string
- *    or buffer returned. If this behavior is not desired, pass `autoEOF:
- *    false`.
+ *    or buffer returned. If this behavior is not desired, pass `autoEOF: false`.
  *
  * @param options.stdin A stdin handler
  * @param options.read A read handler
@@ -451,7 +454,7 @@ function _getStderrDefaults(): StdwriteOpts & Partial<Writer> {
  * works as expected.
  *
  * @param options.batched A batched handler is called with a string whenever a
- * newline character is written is written or stdout is flushed. In the former
+ * newline character is written or stdout is flushed. In the former
  * case, the received line will end with a newline, in the latter case it will
  * not.
  * @param options.raw A raw handler is called with the handler is called with a
@@ -568,7 +571,7 @@ class LegacyReader {
     if (typeof val === "number") {
       return val;
     }
-    if (!val) {
+    if (val === undefined || val === null) {
       return undefined;
     }
     if (ArrayBuffer.isView(val)) {

@@ -5,9 +5,9 @@ Backward compatibility of the API is not guaranteed at this point.
 ## Globals
 
 ```{eval-rst}
-.. js-doc-summary:: globalThis
+.. js:autosummary:: globalThis
 
-.. js-doc-content:: globalThis
+.. js:automodule:: globalThis
 ```
 
 (js-api-pyodide)=
@@ -15,25 +15,39 @@ Backward compatibility of the API is not guaranteed at this point.
 ## pyodide
 
 ```{eval-rst}
-.. js-doc-summary:: pyodide
+.. js:autosummary:: pyodide
 
-.. js-doc-content:: pyodide
+.. js:automodule:: pyodide
 ```
 
 (js-api-pyodide-ffi)=
 
 ## pyodide.ffi
 
+Foreign function interface classes. Can be used for typescript type annotations
+or at runtime for `instanceof` checks.
+
 To import types from `pyodide.ffi` you can use for example
 
-```js
+```ts
 import type { PyProxy } from "pyodide/ffi";
 ```
 
-```{eval-rst}
-.. js-doc-summary:: pyodide.ffi
+If you want to do an instance check, you'll need to access the type via the
+Pyodide API returned from {js:func}`~globalThis.loadPyodide`:
 
-.. js-doc-content:: pyodide.ffi
+```js
+const pyodide = loadPyodide();
+const result = pyodide.runPython("... code here");
+if (result instanceof pyodide.ffi.PyProxy) {
+  // Do something
+}
+```
+
+```{eval-rst}
+.. js:autosummary:: pyodide.ffi
+
+.. js:automodule:: pyodide.ffi
 ```
 
 (js-api-pyodide-canvas)=
@@ -42,8 +56,11 @@ import type { PyProxy } from "pyodide/ffi";
 
 This provides APIs to set a canvas for rendering graphics.
 
-```{eval-rst}
-.. js-doc-summary:: pyodide.canvas
+For example, you need to set a canvas if you want to use the SDL library. See
+{ref}`using-sdl` for more information.
 
-.. js-doc-content:: pyodide.canvas
+```{eval-rst}
+.. js:autosummary:: pyodide.canvas
+
+.. js:automodule:: pyodide.canvas
 ```

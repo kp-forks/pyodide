@@ -6,9 +6,11 @@ import functools
 import itertools
 import pathlib
 import re
-from ast import Str
+import subprocess
+from ast import Constant
 from collections import namedtuple
 from collections.abc import Callable
+from typing import Any
 
 CORE_VERSION_REGEX = r"(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)"
 
@@ -35,18 +37,18 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 Target = namedtuple("target", ("file", "pattern", "prerelease"))
 PYTHON_TARGETS = [
     Target(
+        file=ROOT / "Makefile.envs",
+        pattern=build_version_pattern(r"PYODIDE_VERSION \?= {python_version}"),
+        prerelease=True,
+    ),
+    Target(
         file=ROOT / "src/py/pyodide/__init__.py",
         pattern=build_version_pattern('__version__ = "{python_version}"'),
         prerelease=True,
     ),
     Target(
-        file=ROOT / "src/py/setup.cfg",
-        pattern=build_version_pattern("version = {python_version}"),
-        prerelease=True,
-    ),
-    Target(
-        ROOT / "pyodide-build/pyodide_build/__init__.py",
-        pattern=build_version_pattern('__version__ = "{python_version}"'),
+        file=ROOT / "src/py/pyproject.toml",
+        pattern=build_version_pattern('version = "{python_version}"'),
         prerelease=True,
     ),
     Target(
@@ -81,7 +83,7 @@ JS_TARGETS = [
 
 
 @functools.lru_cache
-def python_version_to_js_version(version: str) -> Str:
+def python_version_to_js_version(version: str) -> Constant:
     """
     Convert Python version name to JS version name
     These two are different in prerelease or dev versions.
@@ -120,7 +122,7 @@ def parse_current_version(target: Target) -> str:
     match = target.pattern.search(content)
 
     if match is None:
-        raise ValueError(f"Unabled to detect version string: {target.file}")
+        raise ValueError(f"Unable to detect version string: {target.file}")
 
     return match.groupdict()["version"]
 
@@ -162,6 +164,41 @@ def generate_updated_content(
     return new_content
 
 
+def run(
+    args: list[str | pathlib.Path], check: bool = True, echo=False, **kwargs: Any
+) -> subprocess.CompletedProcess[Any]:
+    if echo:
+        print(" ".join(str(x) for x in args))
+    result = subprocess.run(args, check=False, text=True, **kwargs)
+    if check and result.returncode:
+        sys.exit(result.returncode)
+    return result
+
+
+def check_clean_working_tree():
+    res = run(
+        ["git", "status", "--untracked-files=no", "--porcelain"],
+        check=False,
+        capture_output=True,
+    )
+    if res.stdout.strip():
+        print("Working tree not clean, quitting")
+        sys.exit(1)
+
+
+def commit(version: str, development: bool):
+    run(["git", "add", "-u"], echo=True)
+    if development:
+        msg = f"Begin Pyodide v{version} development"
+    else:
+        msg = f"Pyodide v{version}"
+    run(["git", "commit", "-m", msg], echo=True)
+
+
+def tag(version: str):
+    run(["git", "tag", version], echo=True)
+
+
 def show_diff(before: str, after: str, file: pathlib.Path):
     diffs = list(
         difflib.unified_diff(
@@ -174,9 +211,24 @@ def show_diff(before: str, after: str, file: pathlib.Path):
 
 def parse_args():
     parser = argparse.ArgumentParser("Bump version strings in the Pyodide repository")
-    parser.add_argument("--new-version", help="New version")
+    parser.add_argument("new_version", help="New version")
     parser.add_argument(
         "--dry-run", action="store_true", help="Don't actually write anything"
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Compare the current contents to the updated contents and fail if it would change anything",
+    )
+    parser.add_argument(
+        "--tag",
+        action="store_true",
+        help="Commit and tag the result",
+    )
+    parser.add_argument(
+        "--dev",
+        action="store_true",
+        help="Make a commit to start a new development version",
     )
 
     return parser.parse_args()
@@ -184,11 +236,10 @@ def parse_args():
 
 def main():
     args = parse_args()
-
-    if args.new_version is None:
-        new_version = input("New version (e.g. 0.22.0, 0.22.0a0, 0.22.0.dev0): ")
-    else:
-        new_version = args.new_version
+    check_clean_working_tree()
+    new_version = args.new_version
+    if args.dev:
+        new_version += ".dev0"
 
     if re.fullmatch(PYTHON_VERSION_REGEX, new_version) is None:
         raise ValueError(f"Invalid new version: {new_version}")
@@ -210,12 +261,25 @@ def main():
         if new_content is not None:
             update_queue.append((target, new_content))
 
+    if args.check:
+        if update_queue:
+            print("Version update would change files, failing", file=sys.stderr)
+            return 1
+        return 0
     if args.dry_run:
-        return
+        return 0
 
     for target, content in update_queue:
         target.file.write_text(content)
 
+    if args.tag or args.dev:
+        commit(args.new_version, args.dev)
+    if args.tag:
+        tag(args.new_version)
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    sys.exit(main())

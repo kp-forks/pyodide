@@ -10,8 +10,14 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 import pyodide
-from pyodide_build.build_env import emscripten_version, get_pyodide_root
-from pyodide_build.install_xbuildenv import _download_xbuildenv, install_xbuildenv
+from pyodide_build.build_env import (
+    emscripten_version,
+    get_build_environment_vars,
+    get_pyodide_root,
+)
+from pyodide_build.xbuildenv import CrossBuildEnvManager
+
+PYVERSION = get_build_environment_vars(get_pyodide_root())["PYVERSION"]
 
 only_node = pytest.mark.xfail_browsers(
     chrome="node only", firefox="node only", safari="node only"
@@ -35,9 +41,11 @@ script_path = pyodide_root / "dist/python"
 
 @only_node
 def test_python_version(selenium):
-    result = subprocess.run([script_path, "-V"], capture_output=True, encoding="utf8")
+    result = subprocess.run(
+        [script_path, "-V"], capture_output=True, encoding="utf8", check=False
+    )
     assert result.returncode == 0
-    assert result.stdout.strip() == "Python " + sys.version.partition(" ")[0]
+    assert result.stdout.strip() == "Python " + PYVERSION
     assert result.stderr == ""
 
 
@@ -51,6 +59,7 @@ def test_dash_c(selenium):
         ],
         capture_output=True,
         encoding="utf8",
+        check=False,
     )
     assert result.returncode == 0
     assert result.stdout.strip() == pyodide.__version__
@@ -73,6 +82,7 @@ asyncio.ensure_future(test())
         ],
         capture_output=True,
         encoding="utf8",
+        check=False,
     )
     assert result.returncode == 0
     assert result.stderr == ""
@@ -93,6 +103,7 @@ print("c", end="")
         ],
         capture_output=True,
         encoding="utf8",
+        check=False,
     )
     assert result.returncode == 0
     assert result.stderr == ""
@@ -105,6 +116,7 @@ def test_dash_m(selenium):
         [script_path, "-m", "platform"],
         capture_output=True,
         encoding="utf8",
+        check=False,
     )
     assert result.returncode == 0
     assert result.stderr == ""
@@ -113,26 +125,23 @@ def test_dash_m(selenium):
 
 @only_node
 def test_dash_m_pip(selenium, monkeypatch, tmp_path):
-    import os
-
-    monkeypatch.setenv("PATH", str(tmp_path), prepend=":")
-    pip_path = tmp_path / "pip"
-    pip_path.write_text("echo 'pip got' $@")
-    os.chmod(pip_path, 0o777)
-
     result = subprocess.run(
         [script_path, "-m", "pip", "install", "pytest"],
         capture_output=True,
         encoding="utf8",
+        check=False,
     )
-    assert result.returncode == 0
-    assert result.stderr == ""
-    assert result.stdout.strip() == "pip got install pytest"
+    assert result.returncode == 1
+    assert (
+        result.stderr.strip() == "Cannot find pyodide pip. Make a pyodide venv first?"
+    )
 
 
 @only_node
 def test_invalid_cmdline_option(selenium):
-    result = subprocess.run([script_path, "-c"], capture_output=True, encoding="utf8")
+    result = subprocess.run(
+        [script_path, "-c"], capture_output=True, encoding="utf8", check=False
+    )
     assert result.returncode != 0
     assert result.stdout == ""
     assert (
@@ -158,13 +167,13 @@ def test_extra_mounts(selenium, tmp_path, monkeypatch):
     tmp_path_b.write_text("print('hello 2')")
     monkeypatch.setenv("_PYODIDE_EXTRA_MOUNTS", f"{dir_a}:{dir_b}")
     result = subprocess.run(
-        [script_path, tmp_path_a], capture_output=True, encoding="utf8"
+        [script_path, tmp_path_a], capture_output=True, encoding="utf8", check=False
     )
     assert result.returncode == 0
     assert result.stdout == "hello 1\n"
     assert result.stderr == ""
     result = subprocess.run(
-        [script_path, tmp_path_b], capture_output=True, encoding="utf8"
+        [script_path, tmp_path_b], capture_output=True, encoding="utf8", check=False
     )
     assert result.returncode == 0
     assert result.stdout == "hello 2\n"
@@ -234,10 +243,13 @@ def test_venv_fail_log(selenium, capsys):
 @only_node
 def test_venv_version(selenium, venv):
     result = subprocess.run(
-        [venv / "bin/python", "--version"], capture_output=True, encoding="utf8"
+        [venv / "bin/python", "--version"],
+        capture_output=True,
+        encoding="utf8",
+        check=False,
     )
     assert result.returncode == 0
-    assert result.stdout.strip() == "Python " + sys.version.partition(" ")[0]
+    assert result.stdout.strip() == "Python " + PYVERSION
     assert result.stderr == ""
 
 
@@ -251,6 +263,7 @@ def test_venv_pyodide_version(selenium, venv):
         ],
         capture_output=True,
         encoding="utf8",
+        check=False,
     )
     assert result.returncode == 0
     assert result.stdout.strip() == pyodide.__version__
@@ -267,6 +280,22 @@ def install_pkg(venv, pkgname):
         ],
         capture_output=True,
         encoding="utf8",
+        check=False,
+    )
+
+
+def uninstall_pkg(venv, pkgname):
+    return subprocess.run(
+        [
+            venv / "bin/pip",
+            "uninstall",
+            pkgname,
+            "--disable-pip-version-check",
+            "-y",
+        ],
+        capture_output=True,
+        encoding="utf8",
+        check=False,
     )
 
 
@@ -286,6 +315,8 @@ def clean_pkg_install_stdout(stdout: str) -> str:
     # since these don't reproduce.
     stdout = re.sub(r"^  .*?\n", "", stdout, flags=re.MULTILINE)
     stdout = re.sub(r"^\[notice\].*?\n", "", stdout, flags=re.MULTILINE)
+    stdout = re.sub(r"^.*cached.*?\n", "", stdout, flags=re.MULTILINE)
+    stdout = re.sub(r"^.*Downloading.*?\n", "", stdout, flags=re.MULTILINE)
     # Remove version numbers
     stdout = re.sub(r"(?<=[<>=_-])[\d+](\.?_?[\d+])*", "*", stdout)
     stdout = re.sub(r" /[a-zA-Z0-9/]*/dist", " .../dist", stdout)
@@ -347,6 +378,7 @@ def test_pip_install_from_pypi_nodeps(selenium, venv):
         ],
         capture_output=True,
         encoding="utf-8",
+        check=False,
     )
     assert result.returncode == 0
     assert result.stdout == str([[0, 1, 2], [3, 4, 5], [6, 7, 8]]) + "\n"
@@ -407,7 +439,7 @@ def test_pip_install_from_pyodide(selenium, venv):
         == dedent(
             """
             Looking in links: .../dist
-            Processing ./dist/regex-*-cpxxx-cpxxx-emscripten_*_wasm32.whl
+            Processing ./dist/regex-*-cpxxx-cpxxx-pyodide_*_wasm32.whl
             Installing collected packages: regex
             Successfully installed regex-*
             """
@@ -428,31 +460,34 @@ def test_pip_install_from_pyodide(selenium, venv):
         ],
         capture_output=True,
         encoding="utf-8",
+        check=False,
     )
     assert result.returncode == 0
     assert (
         result.stdout
         == "{'word': ['one', 'two', 'three'], 'digits': ['1', '2', '3']}" + "\n"
     )
+    result = uninstall_pkg(venv, "regex")
+    assert result.returncode == 0
 
 
-def test_pypa_index(tmp_path):
+def test_package_index(tmp_path):
     """Test that installing packages from the python package index works as
     expected."""
     path = Path(tmp_path)
-    version = "0.21.0"  # just need some version that already exists
-    _download_xbuildenv(version, path)
+    version = "0.26.0"  # just need some version that already exists + contains pyodide-lock.json
 
-    # We don't need host dependencies for this test so zero them out
-    (path / "xbuildenv/requirements.txt").write_text("")
+    mgr = CrossBuildEnvManager(path)
+    mgr.install(version, skip_install_cross_build_packages=True, force_install=True)
 
-    install_xbuildenv(version, path)
+    env_path = mgr.symlink_dir.resolve()
+
     pip_opts = [
         "--index-url",
-        "file:" + str((path / "xbuildenv/pyodide-root/pypa_index").resolve()),
-        "--platform=emscripten_3_1_14_wasm32",
+        "file:" + str((env_path / "xbuildenv/pyodide-root/package_index").resolve()),
+        "--platform=pyodide_2024_0_wasm32",
         "--only-binary=:all:",
-        "--python-version=310",
+        "--python-version=312",
         "-t",
         str(path / "temp_lib"),
     ]
@@ -473,16 +508,14 @@ def test_pypa_index(tmp_path):
         ],
         capture_output=True,
         encoding="utf8",
+        check=False,
     )
-    print("\n\nstdout:")
-    print(result.stdout)
-    print("\n\nstderr:")
-    print(result.stderr)
+
     assert result.returncode == 0
     stdout = re.sub(r"(?<=[<>=-])([\d+]\.?)+", "*", result.stdout)
     assert (
         stdout.strip().rsplit("\n", 1)[-1]
-        == "Successfully installed attrs-* micropip-* numpy-* sharedlib-test-py-*"
+        == "Successfully installed attrs-* micropip-* numpy-* packaging-* sharedlib-test-py-*"
     )
 
 
@@ -491,6 +524,7 @@ def test_sys_exit(selenium, venv):
         [venv / "bin/python", "-c", "import sys; sys.exit(0)"],
         capture_output=True,
         encoding="utf-8",
+        check=False,
     )
     assert result.returncode == 0
     assert result.stdout == ""
@@ -499,7 +533,98 @@ def test_sys_exit(selenium, venv):
         [venv / "bin/python", "-c", "import sys; sys.exit(12)"],
         capture_output=True,
         encoding="utf-8",
+        check=False,
     )
     assert result.returncode == 12
     assert result.stdout == ""
     assert result.stderr == ""
+
+
+def test_cpp_exceptions(selenium, venv):
+    result = install_pkg(venv, "cpp-exceptions-test2")
+    print(result.stdout)
+    print(result.stderr)
+    assert result.returncode == 0
+    result = subprocess.run(
+        [venv / "bin/python", "-c", "import cpp_exceptions_test2"],
+        capture_output=True,
+        encoding="utf-8",
+        check=False,
+    )
+    print(result.stdout)
+    print(result.stderr)
+    assert result.returncode == 1
+    assert "ImportError: oops" in result.stderr
+
+
+@only_node
+def test_pip_install_sys_platform_condition_skipped(selenium, venv):
+    """impure Python package built with Pyodide"""
+    result = install_pkg(venv, "regex; sys_platform != 'emscripten'")
+    assert result.returncode == 0
+    ignoring = """Ignoring regex: markers 'sys_platform != "emscripten"' don't match your environment"""
+    assert ignoring in result.stdout
+
+
+@only_node
+def test_pip_install_sys_platform_condition_kept(selenium, venv):
+    """impure Python package built with Pyodide"""
+    result = install_pkg(venv, "regex; sys_platform == 'emscripten'")
+    assert result.returncode == 0
+    assert (
+        clean_pkg_install_stdout(result.stdout)
+        == dedent(
+            """
+            Looking in links: .../dist
+            Processing ./dist/regex-*-cpxxx-cpxxx-pyodide_*_wasm32.whl
+            Installing collected packages: regex
+            Successfully installed regex-*
+            """
+        ).strip()
+    )
+
+    result = subprocess.run(
+        [
+            venv / "bin/python",
+            "-c",
+            dedent(
+                r"""
+                import regex
+                m = regex.match(r"(?:(?P<word>\w+) (?P<digits>\d+)\n)+", "one 1\ntwo 2\nthree 3\n")
+                print(m.capturesdict())
+                """
+            ),
+        ],
+        capture_output=True,
+        encoding="utf-8",
+        check=False,
+    )
+    assert result.returncode == 0
+    assert (
+        result.stdout
+        == "{'word': ['one', 'two', 'three'], 'digits': ['1', '2', '3']}" + "\n"
+    )
+    result = uninstall_pkg(venv, "regex")
+    assert result.returncode == 0
+
+
+@only_node
+def test_dash_m_pip_venv(selenium, venv):
+    result = subprocess.run(
+        [venv / "bin/python", "-m", "pip", "install", "regex"],
+        capture_output=True,
+        encoding="utf8",
+        check=False,
+    )
+    assert result.returncode == 0
+    assert (
+        clean_pkg_install_stdout(result.stdout)
+        == dedent(
+            """
+            Looking in links: .../dist
+            Processing ./dist/regex-*-cpxxx-cpxxx-pyodide_*_wasm32.whl
+            Installing collected packages: regex
+            Successfully installed regex-*
+            """
+        ).strip()
+    )

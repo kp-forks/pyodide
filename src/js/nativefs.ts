@@ -1,4 +1,33 @@
-import { Module } from "./module";
+import { Module } from "./types";
+
+/**
+ * @private
+ */
+async function syncfs(m: Module, direction: boolean): Promise<void> {
+  return new Promise((resolve, reject) => {
+    m.FS.syncfs(direction, (err: any) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+/**
+ * @private
+ */
+export async function syncLocalToRemote(m: Module): Promise<void> {
+  return await syncfs(m, false);
+}
+
+/**
+ * @private
+ */
+export async function syncRemoteToLocal(m: Module): Promise<void> {
+  return await syncfs(m, true);
+}
 
 /**
  * @private
