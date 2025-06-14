@@ -29,12 +29,32 @@ myst:
   {pr}`5320`
 - {{ Enhancement }} Upgraded to Python 3.13.1. {pr}`5498`
 
+- {{ Enhancement }} `time.sleep()` will now stack switch if possible. This
+  allows other events on the event loop to be processed during the
+  sleep.
+  {pr}`5686`
+- {{ Enhancement }} Added `JsProxy.to_weakref()` as a helper method equivalent
+  to `WeakRef.new(proxy)`. Used it to remove a memory leak that occurs when
+  `add_event_listener()` is used and then the DOM element is removed from
+  JavaScript.
+  {pr}`5687`
+
 - {{ Fix }} Importing matplotlib should now be significantly faster. {pr}`5569`
 
 - {{ Breaking }} When `lockfileURL` is given to `loadPyodide`, the
   base URL for the packages is now calculated from the lockfile URL, not from
   the `indexURL`.
   {pr}`5652`
+
+- {{ Enhancement }} Property access on a `PyProxy` of a dictionary will now fall
+  back to `__getitem__()` if there is no attribute of the given name.
+  {pr}`5674`
+
+- {{ Fix }} Fixes a bug that `pyodide.loadPackage` not respecting `messageCallback` and `errorCallback` options
+  in some cases.
+  {pr}`5692`
+
+- {{ Fix }} Fixed iPad + Safari issue started to happen since 0.27.1. {pr}`5695`
 
 ### `python` CLI entrypoint
 
@@ -52,6 +72,7 @@ myst:
 - Upgraded `narwhals` to 1.41.0 {pr}`5651`
 - Upgraded `rateslib` to 1.7.0 {pr}`5400`
 - Upgraded `protobuf` to 6.31.1 {pr}`5672`
+- Upgraded `scikit-learn` to 1.7.0 {pr}`5694`
 
 - {{ Breaking }} The default backend for Matplotlib is now `webagg` instead of
   `matplotlib-pyodide`. `webagg` is a modified version of the WebAgg backend
